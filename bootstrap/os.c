@@ -4,7 +4,7 @@
 #include "os/core.c"
 
 #if OS_WINDOWS
-#error todo
+#include "os/windows.c"
 #elif OS_LINUX
 #include "os/posix.c"
 #elif OS_MAC

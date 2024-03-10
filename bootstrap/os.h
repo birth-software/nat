@@ -8,7 +8,7 @@
 #include "os/core.h"
 
 #if OS_WINDOWS
-#error todo
+#include "os/windows.h"
 #elif OS_LINUX
 
 #include "os/posix.h"

@@ -2,6 +2,11 @@
 
 #if defined(_MSC_VER)
 #define COMPILER_MSVC 1
+#if defined (_WIN32)
+#define OS_WINDOWS 1
+#else
+#error todo
+#endif
 #elif defined(__clang__)
 
 #define COMPILER_CLANG 1

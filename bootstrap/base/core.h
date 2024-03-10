@@ -20,6 +20,12 @@ typedef s64 b64;
 typedef float f32;
 typedef double f64;
 
+#if OS_WINDOWS && __STDC_VERSION__ < 202010L
+#define true 1
+#define false 0
+#else
+#endif
+
 #define unused(x) (void)x
 #define bytes(n) (n)
 #define kilobytes(n) ((n) << 10)
@@ -27,9 +33,17 @@ typedef double f64;
 #define gigabytes(n) (((u64)n) << 30)
 #define terabytes(n) (((u64)n) << 40)
 
+#if COMPILER_MSVC
+#define trap() __debugbreak()
+#else 
 #define trap() __builtin_trap()
+#endif
 
+#if OS_WINDOWS
+#define threadlocal __declspec(thread)
+#else
 #define threadlocal __thread
+#endif
 
 #define check(b) \
     if (!(b)) trap()
