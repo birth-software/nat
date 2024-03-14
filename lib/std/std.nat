@@ -1,0 +1,194 @@
+comptime {
+    _ = start;
+}
+
+test {
+    _ = build;
+    _ = builtin;
+    _ = os;
+    _ = start;
+}
+
+const build = #import("build.nat");
+const builtin = #import("builtin.nat");
+const os = #import("os.nat");
+const start = #import("start.nat");
+const testing = #import("testing.nat");
+
+const assert = fn(ok: bool) void {
+    if (!ok) {
+        unreachable;
+    }
+}
+
+const print = fn(bytes: []const u8) void {
+    const file_descriptor = os.StdFileDescriptor.get(descriptor = .stdout);
+    const file_writer = FileWriter{
+        .descriptor = file_descriptor,
+    };
+    _ = file_writer.write_all(bytes) catch unreachable;
+}
+
+const format_usize = fn(n: usize, buffer: &[65]u8) []u8 {
+    var index: usize = buffer.len;
+    var absolute = n;
+
+    while (true) {
+        const digit: u8 = #cast(absolute % 10);
+        index -= 1;
+        const ch = '0' + digit;
+        buffer[index] = ch;
+        assert(buffer[index] == ch);
+        absolute /= 10;
+
+        if (absolute == 0) {
+            break;
+        }
+    }
+
+    return buffer[index..];
+}
+
+const print_usize = fn(n: usize) void {
+    var buffer: [65]u8 = undefined;
+    const bytes = format_usize(n, buffer = buffer.&);
+    assert(bytes.len < buffer.len);
+    const file_descriptor = os.StdFileDescriptor.get(descriptor = .stdout);
+    const file_writer = FileWriter{
+        .descriptor = file_descriptor,
+    };
+    file_writer.write_all(bytes) catch unreachable;
+}
+
+const print_u8 = fn(n: u8) void {
+    print_usize(n);
+}
+
+const Allocator = struct {
+    handler: &const fn(allocator: &Allocator, old_ptr: ?[&]const u8, old_size: usize, new_size: usize, alignment: u16) Allocator.Error![&]u8,
+
+    const Error = error{
+        out_of_memory,
+        free_failed,
+    };
+
+    const allocate = fn (allocator: &Allocator, size: usize, alignment: u16) Allocator.Error![]u8 {
+        const pointer = try allocator.handler(allocator, old_ptr = null, old_size = 0, new_size = size, alignment);
+        return pointer[0..size];
+    }
+
+    const free = fn (allocator: &Allocator, bytes: []const u8) Allocator.Error!void {
+        _ = try allocator.handler(allocator, old_ptr = bytes.ptr, old_size = bytes.len, new_size = 0, alignment = 0);
+    }
+
+    const duplicate_bytes = fn (allocator: &Allocator, bytes: []const u8) Allocator.Error![]u8 {
+        const result = try allocator.allocate(size = bytes.len, alignment = 0);
+        copy_bytes(destination = result, source = bytes);
+        return result;
+    }
+};
+
+const PageAllocator = struct{
+    allocator: Allocator = .{
+        .handler = handler.&,
+    },
+
+    const allocate = fn (a: &PageAllocator, size: usize, alignment: u16) Allocator.Error![]u8 {
+        const allocation_result = try a.allocator.allocate(size, alignment);
+        return allocation_result;
+    }
+
+    const free = fn (a: &PageAllocator, bytes: []const u8) Allocator.Error!void {
+        try a.allocator.free(bytes);
+    }
+
+    const handler = fn (allocator: &Allocator, maybe_old_ptr: ?[&]const u8, old_size: usize, new_size: usize, alignment: u16) Allocator.Error![&]u8{
+        var maybe_new_ptr: [&]u8 = undefined;
+        if (new_size > 0) {
+            const general_protection_flags = os.ProtectionFlags{
+                .read = true,
+                .write = true,
+                .execute = false,
+            };
+            const general_map_flags = os.MapFlags{
+                .reserve = true,
+                .commit = true,
+            };
+
+            maybe_new_ptr = os.allocate_virtual_memory(address = null, length = new_size, general_protection_flags, general_map_flags) catch return Allocator.Error.out_of_memory;
+        }
+
+        if (maybe_old_ptr) |old_ptr| {
+            if (new_size > 0) {
+                unreachable;
+            } else {
+                os.free_virtual_memory(old_ptr[0..old_size]) catch return Allocator.Error.free_failed;
+                return undefined;
+            }
+        } else {
+            return maybe_new_ptr;
+        }
+    }
+
+    const get_allocator = fn(page_allocator: &PageAllocator) &Allocator {
+        return page_allocator.allocator.&;
+    }
+};
+
+const Writer = struct{
+    callback: &const fn(writer: &Writer, bytes: []const u8) Writer.Error!usize,
+    const Error = error{
+        write_failed,
+    };
+};
+
+const FileWriter = struct{
+    descriptor: os.FileDescriptor,
+
+    const write = fn(file_writer: FileWriter, bytes: []const u8) Writer.Error!usize {
+        const bytes_written = file_writer.descriptor.write(bytes) catch return Writer.Error.write_failed;
+        return bytes_written;
+    }
+
+    const write_all = fn(file_writer: FileWriter, bytes: []const u8) Writer.Error!void {
+        var bytes_written: usize = 0;
+
+        while (bytes_written < bytes.len) {
+            const iteration_written_byte_count = try file_writer.write(bytes = bytes[bytes_written..]);
+            bytes_written += iteration_written_byte_count;
+        }
+
+        assert(bytes_written == bytes.len);
+    }
+};
+
+const copy_bytes = fn(destination: []u8, source: []const u8) void {
+    assert(ok = destination.len == source.len);
+    for (0..destination.len) |i| {
+        destination[i] = source[i];
+    }
+}
+
+const concatenate_bytes = fn(allocator: &Allocator, slices: []const []const u8) Allocator.Error![]u8 {
+    var total_byte_count: usize = 0;
+    for (slices) |slice| {
+        total_byte_count += slice.len;
+    }
+
+    const bytes = try allocator.allocate(total_byte_count, 1);
+    var offset: usize = 0;
+    for (slice) |slice| {
+        copy_bytes(bytes[offset..][0..slice.len], slice);
+        offset += slice.len;
+    }
+
+    return bytes;
+}
+
+const Target = struct {
+    cpu: builtin.Cpu,
+    os: builtin.Os,
+    abi: builtin.Abi,
+};
+
+var page_allocator = PageAllocator{};

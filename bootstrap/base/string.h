@@ -25,8 +25,8 @@ struct String8List
     u64 total_size;
 };
 
-#define str8(ptr, len) (String8){ .pointer = (ptr), .length = (len) }
-#define str8_from_c(cstring) str8((u8*)(cstring), c_string_length(cstring))
+#define str8_from_c(cstring) (String8) { .pointer = (u8*)(cstring), .length = c_string_length(cstring), }
+#define str8_literal(literal) (String8) { .pointer = (u8*)(literal), .length = sizeof(literal) - 1, }
 
 static u64 c_string_length(const char* cstring);
 

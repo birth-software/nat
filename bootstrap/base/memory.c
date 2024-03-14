@@ -30,6 +30,11 @@ void* arena_push(Arena* arena, u64 size)
     return result;
 }
 
+u64 arena_get_position_without_self(Arena* arena)
+{
+    return arena->position - sizeof(Arena);
+}
+
 void* arena_push_no_zero(Arena* arena, u64 size)
 {
     void* result = 0;

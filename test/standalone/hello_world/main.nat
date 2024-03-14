@@ -1,0 +1,5 @@
+const std = #import("std");
+
+const main = fn() *!void {
+    std.print(bytes = "Hello world!\n");
+}

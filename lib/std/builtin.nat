@@ -1,0 +1,34 @@
+const Os = enum{
+    linux,
+    macos,
+    windows,
+    freestanding,
+};
+
+const Cpu = enum{
+    x86_64,
+    aarch64,
+};
+
+const Abi = enum{
+    none,
+    gnu, msvc,
+};
+
+const CallingConvention = enum{
+    system_v,
+};
+
+const PanicReason = enum{
+    integer_overflow,
+    null_unwrap,
+};
+
+const panic = fn (reason: PanicReason) noreturn{
+    #trap();
+}
+
+const TestFunction = struct{
+    name: []const u8,
+    function: &const fn () *!void,
+};

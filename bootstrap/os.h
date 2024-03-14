@@ -10,11 +10,10 @@
 #if OS_WINDOWS
 #include "os/windows.h"
 #elif OS_LINUX
-
-#include "os/posix.h"
+#include "os/linux.h"
 
 #elif OS_MACOS
-#include "os/posix.h"
+#error todo
 #else
 #error todo
 #endif

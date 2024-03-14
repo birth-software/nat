@@ -21,6 +21,7 @@ struct ArenaTemporary{
 static Arena* arena_allocate(u64 size);
 static void* arena_push(Arena* arena, u64 size);
 static void* arena_push_no_zero(Arena* arena, u64 size);
+static u64 arena_get_position_without_self(Arena* arena);
 
 #define push_array_no_zero(arena, type, count) (type*)arena_push_no_zero((arena), sizeof(type) * (count))
 #define push_array(arena, type, count) (type*)arena_push((arena), sizeof(type) * (count))

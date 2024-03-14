@@ -1,4 +1,4 @@
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
 cd ..

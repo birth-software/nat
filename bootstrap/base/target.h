@@ -1,5 +1,11 @@
 #pragma once
 
+#if NDEBUG
+#define BUILD_MODE_RELEASE 1
+#else
+#define BUILD_MODE_DEBUG 1
+#endif
+
 #if defined(_MSC_VER)
 #define COMPILER_MSVC 1
 #if defined (_WIN32)
@@ -51,6 +57,14 @@
 #define LANGUAGE_CPP 1
 #else
 #define LANGUAGE_C 1
+#endif
+
+#if !defined(BUILD_MODE_DEBUG)
+#define BUILD_MODE_DEBUG 0
+#endif
+
+#if !defined(BUILD_MODE_RELEASE)
+#define BUILD_MODE_RELEASE 0
 #endif
 
 #if !defined(ARCH_X86_64)

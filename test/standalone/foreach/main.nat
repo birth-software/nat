@@ -1,0 +1,16 @@
+const Error = error{
+    unexpected_result,
+};
+
+const main = fn() Error!void {
+    var counter: s32 = 0;
+    const loop = 10;
+
+    for (0..loop) |_| {
+        counter += 1;
+    }
+
+    if (loop - counter != 0) {
+        return Error.unexpected_result;
+    }
+}

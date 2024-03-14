@@ -1,0 +1,9 @@
+const std = #import("std");
+const print = std.print;
+
+const main = fn() *!void {
+    var buffer: [std.os.max_path_byte_count:0]u8 = undefined;
+    const bytes = try std.os.current_executable_path(buffer = buffer.&);
+    print(bytes);
+    print(bytes = "\n");
+}

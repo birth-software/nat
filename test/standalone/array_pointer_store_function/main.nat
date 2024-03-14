@@ -1,0 +1,20 @@
+const Error = error{
+    unexpected_result,
+};
+
+const main = fn () Error!void {
+    var buffer: [2]u8 = undefined;
+    const expected = 'a';
+    const index: usize = 1;
+    foo(buffer.&, index, expected);
+    const ch = buffer[index];
+    const sub = expected - ch;
+    const result: u32 = sub;
+    if (result != 0) {
+        return Error.unexpected_result;
+    }
+}
+
+const foo = fn (buffer: &[2]u8, index: usize, ch: u8) void {
+    buffer[index] = ch;
+}

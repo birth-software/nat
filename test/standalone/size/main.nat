@@ -1,0 +1,9 @@
+const Error = error{
+    unexpected_result,
+};
+
+const main = fn () Error!void {
+    if (#size(usize) != 8) {
+        return Error.unexpected_result;
+    }
+}

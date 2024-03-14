@@ -1,0 +1,9 @@
+const main = fn () *!void {
+    _ = foo();
+}
+
+const foo = fn () []u8 {
+    var buffer: [5]u8 = undefined;
+    const buffer_ptr: &[5]u8 = buffer.&;
+    return buffer_ptr[2..];
+}

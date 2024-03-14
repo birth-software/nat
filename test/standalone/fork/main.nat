@@ -1,0 +1,11 @@
+const std = #import("std");
+
+const main = fn() *!void {
+    const pid = try std.os.duplicate_process();
+    if (pid == 0) {
+        std.print(bytes = "Hello from child\n");
+        std.os.exit(exit_code = 0);
+    } else {
+        std.print(bytes = "Hello from parent\n");
+    }
+}

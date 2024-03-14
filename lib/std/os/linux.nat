@@ -1,0 +1,985 @@
+const std = #import("std");
+
+const stdin: FileDescriptor = 0;
+const stdout: FileDescriptor = 1;
+const stderr: FileDescriptor = 2;
+
+const Syscall = switch (#import("builtin").cpu) {
+    .x86_64 => Syscall_x86_64,
+    else => #error("Architecture not supported"),
+};
+
+const ProcessId = s32;
+
+const Syscall_x86_64 = enum(usize) {
+    read = 0,
+    write = 1,
+    open = 2,
+    close = 3,
+    stat = 4,
+    fstat = 5,
+    lstat = 6,
+    poll = 7,
+    lseek = 8,
+    mmap = 9,
+    mprotect = 10,
+    munmap = 11,
+    brk = 12,
+    rt_sigaction = 13,
+    rt_sigprocmask = 14,
+    rt_sigreturn = 15,
+    ioctl = 16,
+    pread64 = 17,
+    pwrite64 = 18,
+    readv = 19,
+    writev = 20,
+    access = 21,
+    pipe = 22,
+    select = 23,
+    sched_yield = 24,
+    mremap = 25,
+    msync = 26,
+    mincore = 27,
+    madvise = 28,
+    shmget = 29,
+    shmat = 30,
+    shmctl = 31,
+    dup = 32,
+    dup2 = 33,
+    pause = 34,
+    nanosleep = 35,
+    getitimer = 36,
+    alarm = 37,
+    setitimer = 38,
+    getpid = 39,
+    sendfile = 40,
+    socket = 41,
+    connect = 42,
+    accept = 43,
+    sendto = 44,
+    recvfrom = 45,
+    sendmsg = 46,
+    recvmsg = 47,
+    shutdown = 48,
+    bind = 49,
+    listen = 50,
+    getsockname = 51,
+    getpeername = 52,
+    socketpair = 53,
+    setsockopt = 54,
+    getsockopt = 55,
+    clone = 56,
+    fork = 57,
+    vfork = 58,
+    execve = 59,
+    exit = 60,
+    wait4 = 61,
+    kill = 62,
+    uname = 63,
+    semget = 64,
+    semop = 65,
+    semctl = 66,
+    shmdt = 67,
+    msgget = 68,
+    msgsnd = 69,
+    msgrcv = 70,
+    msgctl = 71,
+    fcntl = 72,
+    flock = 73,
+    fsync = 74,
+    fdatasync = 75,
+    truncate = 76,
+    ftruncate = 77,
+    getdents = 78,
+    getcwd = 79,
+    chdir = 80,
+    fchdir = 81,
+    rename = 82,
+    mkdir = 83,
+    rmdir = 84,
+    creat = 85,
+    link = 86,
+    unlink = 87,
+    symlink = 88,
+    readlink = 89,
+    chmod = 90,
+    fchmod = 91,
+    chown = 92,
+    fchown = 93,
+    lchown = 94,
+    umask = 95,
+    gettimeofday = 96,
+    getrlimit = 97,
+    getrusage = 98,
+    sysinfo = 99,
+    times = 100,
+    ptrace = 101,
+    getuid = 102,
+    syslog = 103,
+    getgid = 104,
+    setuid = 105,
+    setgid = 106,
+    geteuid = 107,
+    getegid = 108,
+    setpgid = 109,
+    getppid = 110,
+    getpgrp = 111,
+    setsid = 112,
+    setreuid = 113,
+    setregid = 114,
+    getgroups = 115,
+    setgroups = 116,
+    setresuid = 117,
+    getresuid = 118,
+    setresgid = 119,
+    getresgid = 120,
+    getpgid = 121,
+    setfsuid = 122,
+    setfsgid = 123,
+    getsid = 124,
+    capget = 125,
+    capset = 126,
+    rt_sigpending = 127,
+    rt_sigtimedwait = 128,
+    rt_sigqueueinfo = 129,
+    rt_sigsuspend = 130,
+    sigaltstack = 131,
+    utime = 132,
+    mknod = 133,
+    uselib = 134,
+    personality = 135,
+    ustat = 136,
+    statfs = 137,
+    fstatfs = 138,
+    sysfs = 139,
+    getpriority = 140,
+    setpriority = 141,
+    sched_setparam = 142,
+    sched_getparam = 143,
+    sched_setscheduler = 144,
+    sched_getscheduler = 145,
+    sched_get_priority_max = 146,
+    sched_get_priority_min = 147,
+    sched_rr_get_interval = 148,
+    mlock = 149,
+    munlock = 150,
+    mlockall = 151,
+    munlockall = 152,
+    vhangup = 153,
+    modify_ldt = 154,
+    pivot_root = 155,
+    _sysctl = 156,
+    prctl = 157,
+    arch_prctl = 158,
+    adjtimex = 159,
+    setrlimit = 160,
+    chroot = 161,
+    sync = 162,
+    acct = 163,
+    settimeofday = 164,
+    mount = 165,
+    umount2 = 166,
+    swapon = 167,
+    swapoff = 168,
+    reboot = 169,
+    sethostname = 170,
+    setdomainname = 171,
+    iopl = 172,
+    ioperm = 173,
+    create_module = 174,
+    init_module = 175,
+    delete_module = 176,
+    get_kernel_syms = 177,
+    query_module = 178,
+    quotactl = 179,
+    nfsservctl = 180,
+    getpmsg = 181,
+    putpmsg = 182,
+    afs_syscall = 183,
+    tuxcall = 184,
+    security = 185,
+    gettid = 186,
+    readahead = 187,
+    setxattr = 188,
+    lsetxattr = 189,
+    fsetxattr = 190,
+    getxattr = 191,
+    lgetxattr = 192,
+    fgetxattr = 193,
+    listxattr = 194,
+    llistxattr = 195,
+    flistxattr = 196,
+    removexattr = 197,
+    lremovexattr = 198,
+    fremovexattr = 199,
+    tkill = 200,
+    time = 201,
+    futex = 202,
+    sched_setaffinity = 203,
+    sched_getaffinity = 204,
+    set_thread_area = 205,
+    io_setup = 206,
+    io_destroy = 207,
+    io_getevents = 208,
+    io_submit = 209,
+    io_cancel = 210,
+    get_thread_area = 211,
+    lookup_dcookie = 212,
+    epoll_create = 213,
+    epoll_ctl_old = 214,
+    epoll_wait_old = 215,
+    remap_file_pages = 216,
+    getdents64 = 217,
+    set_tid_address = 218,
+    restart_syscall = 219,
+    semtimedop = 220,
+    fadvise64 = 221,
+    timer_create = 222,
+    timer_settime = 223,
+    timer_gettime = 224,
+    timer_getoverrun = 225,
+    timer_delete = 226,
+    clock_settime = 227,
+    clock_gettime = 228,
+    clock_getres = 229,
+    clock_nanosleep = 230,
+    exit_group = 231,
+    epoll_wait = 232,
+    epoll_ctl = 233,
+    tgkill = 234,
+    utimes = 235,
+    vserver = 236,
+    mbind = 237,
+    set_mempolicy = 238,
+    get_mempolicy = 239,
+    mq_open = 240,
+    mq_unlink = 241,
+    mq_timedsend = 242,
+    mq_timedreceive = 243,
+    mq_notify = 244,
+    mq_getsetattr = 245,
+    kexec_load = 246,
+    waitid = 247,
+    add_key = 248,
+    request_key = 249,
+    keyctl = 250,
+    ioprio_set = 251,
+    ioprio_get = 252,
+    inotify_init = 253,
+    inotify_add_watch = 254,
+    inotify_rm_watch = 255,
+    migrate_pages = 256,
+    openat = 257,
+    mkdirat = 258,
+    mknodat = 259,
+    fchownat = 260,
+    futimesat = 261,
+    fstatat64 = 262,
+    unlinkat = 263,
+    renameat = 264,
+    linkat = 265,
+    symlinkat = 266,
+    readlinkat = 267,
+    fchmodat = 268,
+    faccessat = 269,
+    pselect6 = 270,
+    ppoll = 271,
+    unshare = 272,
+    set_robust_list = 273,
+    get_robust_list = 274,
+    splice = 275,
+    tee = 276,
+    sync_file_range = 277,
+    vmsplice = 278,
+    move_pages = 279,
+    utimensat = 280,
+    epoll_pwait = 281,
+    signalfd = 282,
+    timerfd_create = 283,
+    eventfd = 284,
+    fallocate = 285,
+    timerfd_settime = 286,
+    timerfd_gettime = 287,
+    accept4 = 288,
+    signalfd4 = 289,
+    eventfd2 = 290,
+    epoll_create1 = 291,
+    dup3 = 292,
+    pipe2 = 293,
+    inotify_init1 = 294,
+    preadv = 295,
+    pwritev = 296,
+    rt_tgsigqueueinfo = 297,
+    perf_event_open = 298,
+    recvmmsg = 299,
+    fanotify_init = 300,
+    fanotify_mark = 301,
+    prlimit64 = 302,
+    name_to_handle_at = 303,
+    open_by_handle_at = 304,
+    clock_adjtime = 305,
+    syncfs = 306,
+    sendmmsg = 307,
+    setns = 308,
+    getcpu = 309,
+    process_vm_readv = 310,
+    process_vm_writev = 311,
+    kcmp = 312,
+    finit_module = 313,
+    sched_setattr = 314,
+    sched_getattr = 315,
+    renameat2 = 316,
+    seccomp = 317,
+    getrandom = 318,
+    memfd_create = 319,
+    kexec_file_load = 320,
+    bpf = 321,
+    execveat = 322,
+    userfaultfd = 323,
+    membarrier = 324,
+    mlock2 = 325,
+    copy_file_range = 326,
+    preadv2 = 327,
+    pwritev2 = 328,
+    pkey_mprotect = 329,
+    pkey_alloc = 330,
+    pkey_free = 331,
+    statx = 332,
+    io_pgetevents = 333,
+    rseq = 334,
+    pidfd_send_signal = 424,
+    io_uring_setup = 425,
+    io_uring_enter = 426,
+    io_uring_register = 427,
+    open_tree = 428,
+    move_mount = 429,
+    fsopen = 430,
+    fsconfig = 431,
+    fsmount = 432,
+    fspick = 433,
+    pidfd_open = 434,
+    clone3 = 435,
+    close_range = 436,
+    openat2 = 437,
+    pidfd_getfd = 438,
+    faccessat2 = 439,
+    process_madvise = 440,
+    epoll_pwait2 = 441,
+    mount_setattr = 442,
+    quotactl_fd = 443,
+    landlock_create_ruleset = 444,
+    landlock_add_rule = 445,
+    landlock_restrict_self = 446,
+    memfd_secret = 447,
+    process_mrelease = 448,
+    futex_waitv = 449,
+    set_mempolicy_home_node = 450,
+    cachestat = 451,
+};
+
+const Error = error{
+    /// Operation not permitted
+    PERM = 1,
+
+    /// No such file or directory
+    NOENT = 2,
+
+    /// No such process
+    SRCH = 3,
+
+    /// Interrupted system call
+    INTR = 4,
+
+    /// I/O error
+    IO = 5,
+
+    /// No such device or address
+    NXIO = 6,
+
+    /// Arg list too long
+    TOO_BIG = 7,
+
+    /// Exec format error
+    NOEXEC = 8,
+
+    /// Bad file number
+    BADF = 9,
+
+    /// No child processes
+    CHILD = 10,
+
+    /// Try again
+    /// Also means: WOULDBLOCK: operation would block
+    AGAIN = 11,
+
+    /// Out of memory
+    NOMEM = 12,
+
+    /// Permission denied
+    ACCES = 13,
+
+    /// Bad address
+    FAULT = 14,
+
+    /// Block device required
+    NOTBLK = 15,
+
+    /// Device or resource busy
+    BUSY = 16,
+
+    /// File exists
+    EXIST = 17,
+
+    /// Cross-device link
+    XDEV = 18,
+
+    /// No such device
+    NODEV = 19,
+
+    /// Not a directory
+    NOTDIR = 20,
+
+    /// Is a directory
+    ISDIR = 21,
+
+    /// Invalid argument
+    INVAL = 22,
+
+    /// File table overflow
+    NFILE = 23,
+
+    /// Too many open files
+    MFILE = 24,
+
+    /// Not a typewriter
+    NOTTY = 25,
+
+    /// Text file busy
+    TXTBSY = 26,
+
+    /// File too large
+    FBIG = 27,
+
+    /// No space left on device
+    NOSPC = 28,
+
+    /// Illegal seek
+    SPIPE = 29,
+
+    /// Read-only file system
+    ROFS = 30,
+
+    /// Too many links
+    MLINK = 31,
+
+    /// Broken pipe
+    PIPE = 32,
+
+    /// Math argument out of domain of func
+    DOM = 33,
+
+    /// Math result not representable
+    RANGE = 34,
+
+    /// Resource deadlock would occur
+    DEADLK = 35,
+
+    /// File name too long
+    NAMETOOLONG = 36,
+
+    /// No record locks available
+    NOLCK = 37,
+
+    /// Function not implemented
+    NOSYS = 38,
+
+    /// Directory not empty
+    NOTEMPTY = 39,
+
+    /// Too many symbolic links encountered
+    LOOP = 40,
+
+    /// No message of desired type
+    NOMSG = 42,
+
+    /// Identifier removed
+    IDRM = 43,
+
+    /// Channel number out of range
+    CHRNG = 44,
+
+    /// Level 2 not synchronized
+    L2NSYNC = 45,
+
+    /// Level 3 halted
+    L3HLT = 46,
+
+    /// Level 3 reset
+    L3RST = 47,
+
+    /// Link number out of range
+    LNRNG = 48,
+
+    /// Protocol driver not attached
+    UNATCH = 49,
+
+    /// No CSI structure available
+    NOCSI = 50,
+
+    /// Level 2 halted
+    L2HLT = 51,
+
+    /// Invalid exchange
+    BADE = 52,
+
+    /// Invalid request descriptor
+    BADR = 53,
+
+    /// Exchange full
+    XFULL = 54,
+
+    /// No anode
+    NOANO = 55,
+
+    /// Invalid request code
+    BADRQC = 56,
+
+    /// Invalid slot
+    BADSLT = 57,
+
+    /// Bad font file format
+    BFONT = 59,
+
+    /// Device not a stream
+    NOSTR = 60,
+
+    /// No data available
+    NODATA = 61,
+
+    /// Timer expired
+    TIME = 62,
+
+    /// Out of streams resources
+    NOSR = 63,
+
+    /// Machine is not on the network
+    NONET = 64,
+
+    /// Package not installed
+    NOPKG = 65,
+
+    /// Object is remote
+    REMOTE = 66,
+
+    /// Link has been severed
+    NOLINK = 67,
+
+    /// Advertise error
+    ADV = 68,
+
+    /// Srmount error
+    SRMNT = 69,
+
+    /// Communication error on send
+    COMM = 70,
+
+    /// Protocol error
+    PROTO = 71,
+
+    /// Multihop attempted
+    MULTIHOP = 72,
+
+    /// RFS specific error
+    DOTDOT = 73,
+
+    /// Not a data message
+    BADMSG = 74,
+
+    /// Value too large for defined data type
+    OVERFLOW = 75,
+
+    /// Name not unique on network
+    NOTUNIQ = 76,
+
+    /// File descriptor in bad state
+    BADFD = 77,
+
+    /// Remote address changed
+    REMCHG = 78,
+
+    /// Can not access a needed shared library
+    LIBACC = 79,
+
+    /// Accessing a corrupted shared library
+    LIBBAD = 80,
+
+    /// .lib section in a.out corrupted
+    LIBSCN = 81,
+
+    /// Attempting to link in too many shared libraries
+    LIBMAX = 82,
+
+    /// Cannot exec a shared library directly
+    LIBEXEC = 83,
+
+    /// Illegal byte sequence
+    ILSEQ = 84,
+
+    /// Interrupted system call should be restarted
+    RESTART = 85,
+
+    /// Streams pipe error
+    STRPIPE = 86,
+
+    /// Too many users
+    USERS = 87,
+
+    /// Socket operation on non-socket
+    NOTSOCK = 88,
+
+    /// Destination address required
+    DESTADDRREQ = 89,
+
+    /// Message too long
+    MSGSIZE = 90,
+
+    /// Protocol wrong type for socket
+    PROTOTYPE = 91,
+
+    /// Protocol not available
+    NOPROTOOPT = 92,
+
+    /// Protocol not supported
+    PROTONOSUPPORT = 93,
+
+    /// Socket type not supported
+    SOCKTNOSUPPORT = 94,
+
+    /// Operation not supported on transport endpoint
+    /// This code also means `NOTSUP`.
+    OPNOTSUPP = 95,
+
+    /// Protocol family not supported
+    PFNOSUPPORT = 96,
+
+    /// Address family not supported by protocol
+    AFNOSUPPORT = 97,
+
+    /// Address already in use
+    ADDRINUSE = 98,
+
+    /// Cannot assign requested address
+    ADDRNOTAVAIL = 99,
+
+    /// Network is down
+    NETDOWN = 100,
+
+    /// Network is unreachable
+    NETUNREACH = 101,
+
+    /// Network dropped connection because of reset
+    NETRESET = 102,
+
+    /// Software caused connection abort
+    CONNABORTED = 103,
+
+    /// Connection reset by peer
+    CONNRESET = 104,
+
+    /// No buffer space available
+    NOBUFS = 105,
+
+    /// Transport endpoint is already connected
+    ISCONN = 106,
+
+    /// Transport endpoint is not connected
+    NOTCONN = 107,
+
+    /// Cannot send after transport endpoint shutdown
+    SHUTDOWN = 108,
+
+    /// Too many references: cannot splice
+    TOOMANYREFS = 109,
+
+    /// Connection timed out
+    TIMEDOUT = 110,
+
+    /// Connection refused
+    CONNREFUSED = 111,
+
+    /// Host is down
+    HOSTDOWN = 112,
+
+    /// No route to host
+    HOSTUNREACH = 113,
+
+    /// Operation already in progress
+    ALREADY = 114,
+
+    /// Operation now in progress
+    INPROGRESS = 115,
+
+    /// Stale NFS file handle
+    STALE = 116,
+
+    /// Structure needs cleaning
+    UCLEAN = 117,
+
+    /// Not a XENIX named type file
+    NOTNAM = 118,
+
+    /// No XENIX semaphores available
+    NAVAIL = 119,
+
+    /// Is a named type file
+    ISNAM = 120,
+
+    /// Remote I/O error
+    REMOTEIO = 121,
+
+    /// Quota exceeded
+    DQUOT = 122,
+
+    /// No medium found
+    NOMEDIUM = 123,
+
+    /// Wrong medium type
+    MEDIUMTYPE = 124,
+
+    /// Operation canceled
+    CANCELED = 125,
+
+    /// Required key not available
+    NOKEY = 126,
+
+    /// Key has expired
+    KEYEXPIRED = 127,
+
+    /// Key has been revoked
+    KEYREVOKED = 128,
+
+    /// Key was rejected by service
+    KEYREJECTED = 129,
+
+    // for robust mutexes
+
+    /// Owner died
+    OWNERDEAD = 130,
+
+    /// State not recoverable
+    NOTRECOVERABLE = 131,
+
+    /// Operation not possible due to RF-kill
+    RFKILL = 132,
+
+    /// Memory page has hardware error
+    HWPOISON = 133,
+
+    // nameserver query return codes
+
+    /// DNS server returned answer with no data
+    NSRNODATA = 160,
+
+    /// DNS server claims query was misformatted
+    NSRFORMERR = 161,
+
+    /// DNS server returned general failure
+    NSRSERVFAIL = 162,
+
+    /// Domain name not found
+    NSRNOTFOUND = 163,
+
+    /// DNS server does not implement requested operation
+    NSRNOTIMP = 164,
+
+    /// DNS server refused query
+    NSRREFUSED = 165,
+
+    /// Misformatted DNS query
+    NSRBADQUERY = 166,
+
+    /// Misformatted domain name
+    NSRBADNAME = 167,
+
+    /// Unsupported address family
+    NSRBADFAMILY = 168,
+
+    /// Misformatted DNS reply
+    NSRBADRESP = 169,
+
+    /// Could not contact DNS servers
+    NSRCONNREFUSED = 170,
+
+    /// Timeout while contacting DNS servers
+    NSRTIMEOUT = 171,
+
+    /// End of file
+    NSROF = 172,
+
+    /// Error reading file
+    NSRFILE = 173,
+
+    /// Out of memory
+    NSRNOMEM = 174,
+
+    /// Application terminated lookup
+    NSRDESTRUCTION = 175,
+
+    /// Domain name is too long
+    NSRQUERYDOMAINTOOLONG = 176,
+
+    /// Domain name is too long
+    NSRCNAMELOOP = 177,
+};
+
+const FileDescriptor = s32;
+
+const ProtectionFlags = bitfield(u32) {
+    read: bool,
+    write: bool,
+    execute: bool,
+};
+
+const MapFlags = bitfield(u32){
+    shared: bool,
+    private: bool,
+    reserved: u2 = 0,
+    fixed: bool,
+    anonymous: bool,
+};
+
+const get_protection_flags = fn(flags: std.os.ProtectionFlags) ProtectionFlags {
+    return ProtectionFlags{
+        .read = flags.read,
+        .write = flags.write,
+        .execute = flags.execute,
+    };
+}
+
+const get_map_flags = fn(flags: std.os.MapFlags) MapFlags{
+    return MapFlags{
+        .shared = false,
+        .private = true,
+        .fixed = false,
+        .anonymous = true,
+    };
+}
+
+const mmap = fn(address: ?[&]u8, length: usize, protection_flags: ProtectionFlags, map_flags: MapFlags, fd: FileDescriptor, offset: u64) usize {
+    const flat_protection_flags: u32 = #cast(protection_flags);
+    const flat_map_flags: u32 = #cast(map_flags);
+    const result = #syscall(#cast(Syscall.mmap), #cast(address), length, flat_protection_flags, flat_map_flags, #cast(fd), offset);
+    return result;
+}
+
+const munmap = fn(bytes: []const u8) usize {
+    const result = #syscall(#cast(Syscall.munmap), #cast(bytes.ptr), bytes.len);
+    return result;
+}
+
+const readlink = fn(file_path: [&:0]const u8, bytes: []u8) usize {
+    const result = #syscall(#cast(Syscall.readlink), #cast(file_path), #cast(bytes.ptr), bytes.len);
+    return result;
+}
+
+const fork = fn() usize {
+    const result = #syscall(#cast(Syscall.fork));
+    return result;
+}
+
+const execve = fn(path: [&:0]const u8, argv: [&:null]const ?[&:0]const u8, env: [&:null]const ?[&:null]const u8) usize {
+    const result = #syscall(#cast(Syscall.execve), #cast(path), #cast(argv), #cast(env));
+    return result;
+}
+
+const event_file_descriptor = fn(count: u32, flags: u32) usize {
+    const result = #syscall(#cast(Syscall.eventfd2), #cast(count), #cast(flags));
+    return result;
+}
+
+const dup2 = fn(old: FileDescriptor, new: FileDescriptor) usize {
+    const result = #syscall(#cast(Syscall.dup2), #cast(old), #cast(new));
+    return result;
+}
+
+const open = fn(path: [&:0]const u8, flags: u32, permissions: u32) usize {
+    const result = #syscall(#cast(Syscall.open), #cast(path), flags, permissions);
+    return result;
+}
+
+const openat = fn(directory_file_descriptor: FileDescriptor, path: [&:0]const u8, flags: u32, permissions: u32) usize {
+    const result = #syscall(#cast(Syscall.openat), #cast(directory_file_descriptor), #cast(path), flags, permissions);
+    return result;
+}
+
+const read = fn(file_descriptor: FileDescriptor, bytes: []u8) usize {
+    const result = #syscall(#cast(Syscall.read), #cast(file_descriptor), #cast(bytes.ptr), bytes.len);
+    return result;
+}
+
+const write = fn(file_descriptor: FileDescriptor, bytes: []const u8) usize {
+    const result = #syscall(#cast(Syscall.write), #cast(file_descriptor), #cast(bytes.ptr), bytes.len);
+    return result;
+}
+
+const close = fn(file_descriptor: FileDescriptor) usize {
+    const result = #syscall(#cast(Syscall.close), #cast(file_descriptor));
+    return result;
+}
+
+const pipe2 = fn (pipe_pointer: &[2]FileDescriptor, flags: u32) usize {
+    const result = #syscall(#cast(Syscall.pipe2), #cast(pipe_pointer), flags);
+    return result;
+}
+
+const waitpid = fn(pid: ProcessId, status: &u32, flags: u32, resource_usage: usize) usize {
+    const pid_unsigned: u32 = #cast(pid);
+    const result = #syscall(#cast(Syscall.wait4), pid_unsigned, #cast(status), flags, resource_usage);
+    return result;
+}
+
+const poll = fn(file_descriptors: [&]PollFileDescriptor, file_descriptor_count: usize, timeout: s32) usize {
+    const result = #syscall(#cast(Syscall.poll), #cast(file_descriptors), file_descriptor_count, #cast(timeout));
+    return result;
+}
+
+const memfd_create = fn(name: [&:0]const u8, flags: u32) usize {
+    const result = #syscall(#cast(Syscall.memfd_create), flags);
+    return result;
+}
+
+const unwrap_syscall = fn(syscall_result: usize) Error!usize {
+    const signed_syscall_result: ssize = #cast(syscall_result);
+
+    if (signed_syscall_result > -4096 and signed_syscall_result < 0) {
+        const absolute_error: u64 = #cast(-signed_syscall_result);
+        const error_int: u32 = #cast(absolute_error);
+        const err: Error = #cast(error_int);
+        return err;
+    } else {
+        return syscall_result;
+    }
+}
+
+const EventFileDescriptorFlags = enum(u32) {
+    semaphore = 1,
+    cloexec = 0o2000000,
+    nonblock = 0o4000,
+};
+
+const PollFileDescriptor = struct{
+    file_descriptor: FileDescriptor,
+    events: Poll,
+    revents: Poll,
+
+    const Poll = bitfield(u16) {
+        in: bool = false,
+        pri: bool = false,
+        out: bool = false,
+        err: bool = false,
+        hup: bool = false,
+        nval: bool = false,
+        rdnorm: bool = false,
+        rdband: bool = false,
+    };
+};

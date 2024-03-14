@@ -1,0 +1,29 @@
+const expected_number = 123;
+
+const foo = fn () s32 {
+    return expected_number;
+}
+
+const Struct = struct{
+    a: s32,
+    handler: &const fn(s: &Struct) s32,
+
+    const handler_function = fn (s: &Struct) s32 {
+        return s.a;
+    }
+};
+
+const Error = error{
+    unexpected_result,
+};
+
+const main = fn () Error!void {
+    var s = Struct{
+        .a = expected_number,
+        .handler = Struct.handler_function.&,
+    };
+
+    if (s.handler(s.&) - expected_number != 0) {
+        return Error.unexpected_result;
+    }
+}

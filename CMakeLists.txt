@@ -37,7 +37,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 #`find_library(LLD_MINGW NAMES liblldMinGW.so PATHS ${LLVM_LIBRARY_DIRS} NO_DEFAULT_PATH)
 #find_library(LLD_WASM NAMES liblldWasm.so PATHS ${LLVM_LIBRARY_DIRS} NO_DEFAULT_PATH)
 
-#add_compile_options(-fdiagnostics-color=always -Werror -Wall -Wpedantic -Wextra)
+add_compile_options(-fdiagnostics-color=always -funsigned-char -Werror -Wall -Wpedantic -Wextra)
 set (NATIVITY_SOURCE_FILES
     bootstrap/nativity.c
 )

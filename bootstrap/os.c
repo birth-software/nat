@@ -6,9 +6,9 @@
 #if OS_WINDOWS
 #include "os/windows.c"
 #elif OS_LINUX
-#include "os/posix.c"
+#include "os/linux.c"
 #elif OS_MAC
-#include "os/posix.c"
+#error todo
 #else
 #error todo
 #endif

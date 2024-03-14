@@ -1,0 +1,45 @@
+const std = #import("std");
+const builtin = #import("builtin");
+comptime {
+    if (builtin.link_libc) {
+        _ = main;
+    } else {
+        _ = _start;
+    }
+}
+
+const _start :: export = fn naked() noreturn {
+    #asm(`
+        xor ebp, ebp;
+        mov rdi, rsp;
+        and rsp, 0xfffffffffffffff0;
+        call {start};
+    `);
+}
+
+var argument_count: usize = 0;
+var argument_values: [&]const [&:0]const u8 = undefined;
+var environment_values: [&:null]const ?[&:null]const u8 = undefined;
+
+const start :: export = fn (argc_argv_address: usize) noreturn {
+    var argument_address_iterator = argc_argv_address;
+    const argument_count_ptr: &usize = #cast(argument_address_iterator);
+    argument_count = argument_count_ptr.@;
+    argument_address_iterator += #size(usize);
+    argument_values = #cast(argument_address_iterator);
+    const argv = argument_values;
+    argument_address_iterator += #size(usize) * (argument_count + 1);
+    environment_values = #cast(argument_address_iterator);
+    const env = environment_values;
+    #import("root").main() catch std.os.exit(1);
+    std.os.exit(0);
+}
+
+const main :: export = fn (argc: s32, argv: [&]const [&:0]const u8, env: [&:null]const ?[&:null]const u8) s32 {
+    const argc_u: u32 = #cast(argc);
+    argument_count = argc_u;
+    argument_values = argv;
+    environment_values = env;
+    #import("root").main() catch return 1;
+    return 0;
+}

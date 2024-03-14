@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <assert.h>
 #include <string.h>
 
 typedef uint8_t u8;
@@ -49,6 +48,9 @@ typedef double f64;
     if (!(b)) trap()
 
 #define array_count(array) (sizeof(array)/sizeof((array)[0]))
+
+#define min(a, b) (((a)<(b)) ? (a) : (b))
+#define max(a, b) (((a)>(b)) ? (a) : (b))
 
 #define check_null(p) ((p)==0)
 #define set_null(p) ((p)=0)

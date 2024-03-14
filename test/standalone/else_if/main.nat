@@ -1,0 +1,28 @@
+const Error = error{
+    unexpected_result,
+};
+
+const main = fn () Error!void {
+    const a = foo(5);
+    if (a != 123) {
+        return Error.unexpected_result;
+    }
+    const b = foo(5);
+    if (b != 123) {
+        return Error.unexpected_result;
+    }
+
+    if (a - b != 0) {
+        return Error.unexpected_result;
+    }
+}
+
+const foo = fn (arg: s32) s32 {
+    if (arg < 0) {
+        return 12312;
+    } else if (arg > 0) {
+        return 123;
+    } else {
+        return 0;
+    }
+}

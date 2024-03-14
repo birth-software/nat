@@ -1,0 +1,17 @@
+const expected_number = 123;
+
+const foo = fn () s32 {
+    return expected_number;
+}
+
+const Error = error{
+    unexpected_result,
+};
+
+const main = fn () Error!void {
+    var function_pointer = foo.&;
+    const result = function_pointer();
+    if (result - expected_number != 0) {
+        return Error.unexpected_result;
+    }
+}

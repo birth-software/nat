@@ -1,0 +1,10 @@
+const Error = error{
+    unexpected_result,
+};
+
+const main = fn() Error!void {
+    var false_boolean: bool = false;
+    if (false_boolean) {
+        return Error.unexpected_result;
+    }
+}
